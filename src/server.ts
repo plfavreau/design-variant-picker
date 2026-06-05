@@ -37,8 +37,10 @@ type ServerHandle = {
   port: number;
   url: string;
   // Create a new session OR resume an existing one with a fresh batch.
-  // Returns true if this resumed an existing live session (same tab).
-  startSession: (init: StartSessionInit) => { resumed: boolean };
+  // `resumed` is true if this updated an existing live session (same tab).
+  // `openOnly` is true when a fresh session was opened with no variants yet
+  // (skeleton tab); the round resolves immediately with decision:"open".
+  startSession: (init: StartSessionInit) => { resumed: boolean; openOnly?: boolean };
   hasSession: (token: string) => boolean;
 };
 
@@ -267,10 +269,14 @@ export function ensureServer(): ServerHandle {
 
       if (existing) {
         // RESUME: agent produced the next batch -> update the same tab.
+        const wasAwaitingFirstBatch = existing.awaitingFirstBatch === true;
         existing.variants = variants;
         existing.componentContext = componentContext || existing.componentContext;
         existing.batchSize = batchSize || existing.batchSize;
-        existing.rounds += 1;
+        // The initial open->first-fill is NOT a regenerate round; only count
+        // subsequent fills as rounds.
+        if (wasAwaitingFirstBatch) existing.awaitingFirstBatch = false;
+        else existing.rounds += 1;
         existing.lastHeartbeat = now;
         existing.resolveRound = resolver;
         existing.roundResolved = false;
@@ -287,7 +293,8 @@ export function ensureServer(): ServerHandle {
       }
 
       // NEW session.
-      sessions.set(token, {
+      const openOnly = variants.length === 0;
+      const session: Session = {
         token,
         variants,
         componentContext,
@@ -299,9 +306,25 @@ export function ensureServer(): ServerHandle {
         roundResolved: false,
         deliverNextBatch: null,
         pendingBatch: null,
-      });
+        awaitingFirstBatch: openOnly,
+      };
+      sessions.set(token, session);
       startReaper();
-      return { resumed: false };
+
+      // OPEN-ONLY: no variants supplied yet. Open the tab with skeletons and
+      // return immediately so the agent can generate the first batch and re-call
+      // with the same token. The session stays alive awaiting that first batch.
+      if (openOnly) {
+        resolveRound(session, {
+          decision: "open",
+          sessionToken: token,
+          userInstructions: "",
+          roundsRegenerated: 0,
+          desiredBatchSize: batchSize,
+        });
+      }
+
+      return { resumed: false, openOnly };
     },
     hasSession: (token) => sessions.has(token),
   };

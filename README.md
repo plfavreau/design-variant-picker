@@ -20,7 +20,7 @@ Just ask:
 
 > Generate 9 variants of this pricing card and let me pick.
 
-The agent calls the `variant_picker` tool, a browser tab opens with a grid of variants, and you drive from there:
+The agent calls the `variant_picker` tool, a browser tab opens **instantly with loading skeletons** (no waiting on a blank screen), fills in with variants, and you drive from there:
 
 - **Click a tile** to select it.
 - **Generate variants of this** → tiles show skeletons; the agent produces a new batch (riffing on your selection + any notes) and the **same tab updates in place**. Repeat as many times as you want.
@@ -39,6 +39,7 @@ agent ──variant_picker(variants)──▶ local picker tab (you)
        and re-calls with the same sessionToken → same tab
 ```
 
+- To skip the first wait, the agent opens the tab with an empty batch (`open`) so skeletons show immediately, then fills it with the first batch.
 - The tool **blocks** until you act, then returns `use` (with your pick), `regenerate` (the agent generates the next batch itself), or `abandoned` (you closed the tab — the agent never hangs).
 - Variants render in sandboxed `<iframe>`s. The server is bound to `127.0.0.1` and every request needs a per-session random token.
 - Closing the tab cancels gracefully (a beacon resolves the call immediately).

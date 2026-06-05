@@ -292,7 +292,37 @@ export function renderPage(token: string): string {
     }
     els.ctx.textContent = state.componentContext || "(no component context)";
     els.ctx.title = state.componentContext || "";
+
+    // Round-1 fast open: the tab was opened with NO variants yet. Show skeletons
+    // immediately and long-poll for the agent's first batch (same plumbing as a
+    // regenerate round) so the user never stares at a blank screen.
+    if (state.variants.length === 0) {
+      await awaitFirstBatch();
+      return;
+    }
     renderVariants();
+  }
+
+  // Display skeletons and wait for the agent's first batch to arrive.
+  async function awaitFirstBatch() {
+    state.busy = true;
+    renderSkeletons(state.batchSize);
+    els.round.textContent = "Round 1 — waiting for the agent…";
+    setStatus("Waiting for the agent to generate " + state.batchSize + " variants…", true);
+    try {
+      const next = await waitForNextBatch();
+      if (next === null) {
+        if (!state.finished) showToast("Session ended before any variants arrived.");
+        return;
+      }
+      state.variants = next;
+      state.selectedId = null;
+      setStatus("");
+      renderVariants();
+    } finally {
+      state.busy = false;
+      updateButtons();
+    }
   }
 
   // Long-poll for the agent's next batch after a regenerate request.

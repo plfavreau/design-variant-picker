@@ -12,7 +12,7 @@ export type Variant = {
   html: string; // self-contained snippet (inline styles preferred)
 };
 
-export type PickerDecision = "use" | "regenerate" | "abandoned";
+export type PickerDecision = "open" | "use" | "regenerate" | "abandoned";
 
 // Returned from the tool back to the agent (serialized as JSON string).
 export type PickerResult = {
@@ -29,8 +29,8 @@ export type PickerResult = {
   userInstructions: string;
   // How many regenerate rounds have happened so far in this session.
   roundsRegenerated: number;
-  // For decision:"regenerate": how many variants the user wants next round.
-  // The agent SHOULD honor this when producing the next batch.
+  // For decision:"regenerate" (and the initial "open"): how many variants the
+  // user wants next round. The agent SHOULD honor this when producing the batch.
   desiredBatchSize: number;
 };
 
@@ -57,6 +57,11 @@ export type Session = {
   deliverNextBatch: ((variants: Variant[]) => void) | null;
   // If the agent's batch arrives before the page starts polling, stash it here.
   pendingBatch: Variant[] | null;
+
+  // True when the session was opened with NO variants (skeleton tab) and is
+  // waiting for the agent's FIRST batch. That first fill is not counted as a
+  // regenerate round.
+  awaitingFirstBatch?: boolean;
 };
 
 // Default number of variants per round when the agent does not specify one.

@@ -113,6 +113,22 @@ function summarizeResult(result: PickerResult, publicBase: string | null): strin
     roundsRegenerated: result.roundsRegenerated,
   };
 
+  if (result.decision === "open") {
+    return JSON.stringify(
+      {
+        ...base,
+        desiredBatchSize: result.desiredBatchSize,
+        note:
+          "Skeleton tab opened instantly. Now generate EXACTLY desiredBatchSize self-contained " +
+          "HTML variants YOURSELF (reuse this conversation's model and context), then call " +
+          "variant_picker AGAIN with the SAME sessionToken and the generated variants to fill the " +
+          "skeletons in place. Do NOT open a new tab.",
+      },
+      null,
+      2,
+    );
+  }
+
   if (result.decision === "use") {
     return JSON.stringify(
       {
@@ -167,9 +183,13 @@ export const VariantPickerPlugin: Plugin = async () => {
           "It returns one of: decision='use' (chosenVariant + userInstructions), " +
           "decision='regenerate' (the user wants a NEW batch — YOU generate it with your own " +
           "model honoring userInstructions/baseVariant/desiredBatchSize, then call this tool " +
-          "AGAIN with the same sessionToken to refresh the SAME tab), or decision='abandoned' " +
-          "(user closed it). The plugin contains NO LLM; regeneration reuses THIS conversation's " +
-          "model via the re-call loop. Use when the user wants to pick a UI design among options.",
+          "AGAIN with the same sessionToken to refresh the SAME tab), decision='open' (you passed " +
+          "an EMPTY variants array to open a skeleton tab instantly — now generate the first batch " +
+          "and re-call with the returned sessionToken), or decision='abandoned' (user closed it). " +
+          "The plugin contains NO LLM; regeneration reuses THIS conversation's model via the " +
+          "re-call loop. Use when the user wants to pick a UI design among options. TIP: to avoid " +
+          "the user waiting on a blank screen, call this FIRST with variants:[] to show skeletons " +
+          "immediately, then re-call with the generated batch.",
         args: {
           variants: z
             .array(
@@ -181,8 +201,12 @@ export const VariantPickerPlugin: Plugin = async () => {
                   .describe("self-contained HTML snippet (inline CSS or single <style> block; no external assets)"),
               }),
             )
-            .min(1)
-            .describe("Batch of variants to display this round."),
+            .describe(
+              "Batch of variants to display this round. Pass an EMPTY array on the FIRST call to " +
+                "open the picker tab IMMEDIATELY with loading skeletons (no first-wait): the tool " +
+                "returns right away with decision='open' + sessionToken, then you generate the " +
+                "first batch and re-call with that sessionToken to fill the skeletons in place.",
+            ),
           componentContext: z
             .string()
             .describe("Description of what the component is / the design intent. Shown in the picker header."),
@@ -232,7 +256,7 @@ export const VariantPickerPlugin: Plugin = async () => {
           }
 
           const result = await new Promise<PickerResult>((resolve) => {
-            const { resumed } = server.startSession({
+            const { resumed, openOnly } = server.startSession({
               token,
               variants,
               componentContext: args.componentContext,
@@ -244,10 +268,11 @@ export const VariantPickerPlugin: Plugin = async () => {
               const localUrl = `${server.url}/?token=${token}`;
               const shareUrl = publicBase ? `${publicBase}/?token=${token}` : localUrl;
               openBrowser(localUrl);
+              const how = openOnly ? "picker opening with skeletons" : "picker ready";
               if (publicBase) {
-                console.log(`[design-variant-picker] picker ready (remote): ${shareUrl}`);
+                console.log(`[design-variant-picker] ${how} (remote): ${shareUrl}`);
               } else {
-                console.log(`[design-variant-picker] picker ready: ${localUrl}`);
+                console.log(`[design-variant-picker] ${how}: ${localUrl}`);
               }
             } else {
               console.log(`[design-variant-picker] refreshed session ${token} with a new batch`);

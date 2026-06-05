@@ -1,6 +1,6 @@
 {
   "name": "design-variant-picker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Interactive human-in-the-loop design variant picker for OpenCode. The agent shows HTML design variants in a browser grid; the user picks or asks for regenerations (produced by the same conversation's model) until satisfied.",
   "type": "module",
   "main": "dist/index.js",
