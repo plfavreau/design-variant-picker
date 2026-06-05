@@ -1,0 +1,49 @@
+{
+  "name": "design-variant-picker",
+  "version": "0.1.0",
+  "description": "Interactive human-in-the-loop design variant picker for OpenCode. The agent shows HTML design variants in a browser grid; the user picks or asks for regenerations (produced by the same conversation's model) until satisfied.",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "bun build src/index.ts --outfile dist/index.js --target bun --format esm --external @opencode-ai/plugin",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "design",
+    "variant",
+    "picker",
+    "ui",
+    "human-in-the-loop",
+    "frontend"
+  ],
+  "author": "plfavreau",
+  "license": "MIT",
+  "homepage": "https://github.com/plfavreau/design-variant-picker#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plfavreau/design-variant-picker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/plfavreau/design-variant-picker/issues"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.3.0"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": ">=1.3.0"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}
