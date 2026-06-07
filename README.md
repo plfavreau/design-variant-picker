@@ -2,6 +2,10 @@
 
 Human-in-the-loop design picker for [OpenCode](https://opencode.ai). The agent generates HTML design variants; you pick one — or ask for more — from a live browser grid. Regenerations are produced by **your current conversation's model**. No extra LLM, no API keys.
 
+## Demo
+
+![design-variant-picker in action](assets/demo.gif)
+
 ## Install
 
 Add it to your `opencode.json`:
