@@ -5,7 +5,7 @@ A design picker for [OpenCode](https://opencode.ai) that keeps you in the loop. 
 ## Demo
 
 <p align="center">
-  <video src="https://github.com/plfavreau/design-variant-picker/raw/main/assets/demo.mp4" controls muted autoplay loop></video>
+  <img src="assets/demo.gif" alt="design-variant-picker in action" />
 </p>
 
 ## Install
