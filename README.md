@@ -1,6 +1,6 @@
 # design-variant-picker
 
-A design picker for [OpenCode](https://opencode.ai) that keeps you in the loop. The agent builds HTML design variants, and you pick one (or ask for more) from a live grid in your browser. New variants are made by the model you're already chatting with, so there's **no vision LLM required**. No extra model, no API keys.
+A design picker for [OpenCode](https://opencode.ai) that keeps you in the loop. The agent builds HTML design variants, and you pick one (or ask for more) from a live grid in your browser. New variants are made by the model you're already chatting with, so there's **no image-generating model required**. The model just writes HTML, no extra model, no API keys.
 
 ## Demo
 
