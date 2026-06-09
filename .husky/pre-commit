@@ -1,0 +1,22 @@
+# design-variant-picker pre-commit quality gate.
+#
+# Runs Fallow on every commit so new code stays clean:
+#   - Fallow  https://github.com/fallow-rs/fallow  (dead code, dupes, complexity, architecture)
+#
+# (React Doctor is omitted: this is a build/tooling package, not a React app.)
+#
+# Gating policy: block on NEWLY-INTRODUCED issues only. Pre-existing debt does
+# not block commits (fallow `audit` attributes findings to the change set).
+#
+# Escape hatches:
+#   git commit --no-verify     skip the whole hook once
+#   SKIP_FALLOW=1 git commit   skip Fallow
+
+set -e
+
+if [ "$SKIP_FALLOW" = "1" ]; then
+  echo "pre-commit: Fallow skipped (SKIP_FALLOW=1)"
+else
+  echo "pre-commit: Fallow audit (new issues vs base)"
+  npx fallow audit --quiet
+fi
